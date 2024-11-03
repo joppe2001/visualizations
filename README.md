@@ -109,3 +109,8 @@ rye sync
 # If using pip
 pip install e .
 ```
+
+
+
+
+Joppe Montezinos 1872651

@@ -1,12 +1,9 @@
 import pandas as pd
 import click
-from pathlib import Path
 from config_handler import ConfigHandler
 from visualization import create_simple_message_frequency_plot
 from emoji_use import EmojiAnalyzer, ChartConfig, OutputConfig
 from timestamp import visualize_hourly_activity
-from dataclasses import dataclass
-from typing import Optional
 from distribution import SentimentAnalyzer, BasePlotter, ColumnConfig
 from dimensionality import process_text_for_viz  # New import
 
