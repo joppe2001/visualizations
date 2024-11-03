@@ -2,121 +2,170 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Optional
 import pandas as pd
-import seaborn as sns
+import numpy as np
 import matplotlib.pyplot as plt
+import seaborn as sns
+from scipy.interpolate import make_interp_spline
 
 
 @dataclass
-class ChartStyle:
-    """Configuration for chart appearance."""
+class ModernChartStyle:
+    """Configuration for modern chart appearance."""
     figure_size: tuple[int, int] = (14, 8)
-    bar_color: str = '#3498db'
-    peak_line_color: str = '#e74c3c'
+    primary_color: str = '#4361ee'
+    secondary_color: str = '#e74c3c'
+    highlight_color: str = '#2ecc71'
+    background_color: str = '#f8f9fa'
+    grid_color: str = '#dee2e6'
+    text_color: str = '#2d3436'
     title_size: int = 20
     label_size: int = 14
     tick_size: int = 12
     annotation_size: int = 10
-    grid_alpha: float = 0.7
     dpi: int = 300
 
 
-@dataclass
-class ActivityStats:
-    """Container for hourly activity statistics."""
-    hourly_counts: pd.DataFrame
-    peak_hour: int
-    start_date: datetime
-    end_date: datetime
-    total_messages: int
+def create_non_negative_trend(x, y, smoothing_factor=300):
+    """Create a smooth, non-negative trend line."""
+    # Create a smoother line by adding points before and after
+    x_extended = np.concatenate(([x[0] - 1], x, [x[-1] + 1]))
+    y_extended = np.concatenate(([y[0]], y, [y[-1]]))
 
+    # Create the spline function
+    spl = make_interp_spline(x_extended, y_extended, k=3)
 
-def analyze_hourly_activity(df: pd.DataFrame) -> ActivityStats:
-    """Analyze hourly activity patterns in the data."""
-    df = df.copy()
-    df['hour'] = pd.to_datetime(df['timestamp']).dt.hour
+    # Generate smooth points
+    x_smooth = np.linspace(x[0], x[-1], smoothing_factor)
+    y_smooth = spl(x_smooth)
 
-    hourly_counts = df['hour'].value_counts().sort_index().reset_index()
-    hourly_counts.columns = ['hour', 'count']
+    # Ensure non-negative values
+    y_smooth = np.maximum(y_smooth, 0)
 
-    return ActivityStats(
-        hourly_counts=hourly_counts,
-        peak_hour=hourly_counts.loc[hourly_counts['count'].idxmax(), 'hour'],
-        start_date=pd.to_datetime(df['timestamp']).min(),
-        end_date=pd.to_datetime(df['timestamp']).max(),
-        total_messages=len(df)
-    )
+    return x_smooth, y_smooth
 
 
 def visualize_hourly_activity(df: pd.DataFrame,
-                              output_path: str,
-                              style: Optional[ChartStyle] = None) -> ActivityStats:
-    style = style or ChartStyle()
-    stats = analyze_hourly_activity(df)
+                                     output_path: str,
+                                     style: Optional[ModernChartStyle] = None) -> None:
+    """
+    Create a modern yet clear visualization of hourly activity patterns.
 
-    # Create the plot
-    plt.figure(figsize=style.figure_size)
+    Args:
+        df: DataFrame containing message data with 'timestamp' column
+        output_path: Path to save the visualization
+        style: Optional styling configuration
+    """
+    style = style or ModernChartStyle()
 
-    # Create base bar plot
-    sns.barplot(
-        x='hour',
-        y='count',
-        data=stats.hourly_counts,
-        color=style.bar_color
+    # Prepare the data
+    df = df.copy()
+    df['hour'] = pd.to_datetime(df['timestamp']).dt.hour
+    hourly_counts = df['hour'].value_counts().sort_index().reset_index()
+    hourly_counts.columns = ['hour', 'count']
+
+    # Calculate statistics
+    total_messages = len(df)
+    peak_idx = hourly_counts['count'].idxmax()
+    peak_hour = hourly_counts.loc[peak_idx, 'hour']
+    peak_count = hourly_counts.loc[peak_idx, 'count']
+    start_date = pd.to_datetime(df['timestamp']).min()
+    end_date = pd.to_datetime(df['timestamp']).max()
+
+    # Set up the plot with modern styling
+    plt.style.use('seaborn-v0_8-whitegrid')
+    fig, ax = plt.subplots(figsize=style.figure_size,
+                           facecolor=style.background_color)
+    ax.set_facecolor(style.background_color)
+
+    # Create the main bar plot with gradient color
+    bars = ax.bar(hourly_counts['hour'],
+                  hourly_counts['count'],
+                  color=style.primary_color,
+                  alpha=0.7)
+
+    # Add a smooth, non-negative trend line
+    x_smooth, y_smooth = create_non_negative_trend(
+        hourly_counts['hour'].values,
+        hourly_counts['count'].values
     )
+    ax.plot(x_smooth, y_smooth,
+            color=style.secondary_color,
+            linewidth=2,
+            label='Activity Trend')
 
-    # Configure title and labels
-    plt.title('WhatsApp Message Frequency by Hour of Day',
-              fontsize=style.title_size,
-              pad=20)
-    plt.xlabel('Hour of Day (24-hour format)',
-               fontsize=style.label_size,
-               labelpad=10)
-    plt.ylabel('Number of Messages',
-               fontsize=style.label_size,
-               labelpad=10)
+    # Highlight peak activity
+    peak_bar = bars[peak_hour]
+    peak_bar.set_color(style.highlight_color)
+    peak_bar.set_alpha(0.9)
 
-    # Configure ticks
-    plt.xticks(range(0, 24), fontsize=style.tick_size)
-    plt.yticks(fontsize=style.tick_size)
+    # Add peak annotation
+    ax.annotate(f'Peak Activity: {peak_count} messages',
+                xy=(peak_hour, peak_count),
+                xytext=(10, 10),
+                textcoords='offset points',
+                ha='left',
+                va='bottom',
+                bbox=dict(boxstyle='round,pad=0.5',
+                          fc=style.background_color,
+                          alpha=0.8,
+                          ec=style.highlight_color),
+                color=style.text_color,
+                fontsize=style.annotation_size,
+                arrowprops=dict(arrowstyle='->',
+                                connectionstyle='arc3,rad=0.2',
+                                color=style.highlight_color))
 
-    # Add value labels on bars
-    for i, v in enumerate(stats.hourly_counts['count']):
-        plt.text(i, v + 0.5, str(v),
-                 ha='center',
-                 va='bottom',
-                 fontsize=style.annotation_size)
+    # Customize grid
+    ax.grid(True, axis='y', alpha=0.3, color=style.grid_color)
+    ax.set_axisbelow(True)
 
-    # Add grid
-    plt.grid(axis='y', linestyle='--', alpha=style.grid_alpha)
+    # Remove top and right spines
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+    ax.spines['left'].set_color(style.grid_color)
+    ax.spines['bottom'].set_color(style.grid_color)
 
-    # Add time period text
-    period_text = (f'Time period: {stats.start_date.strftime("%Y-%m-%d")} '
-                   f'to {stats.end_date.strftime("%Y-%m-%d")}')
-    plt.text(0.5, -0.15, period_text,
-             ha='center',
-             va='center',
-             transform=plt.gca().transAxes,
-             fontsize=style.tick_size,
-             alpha=0.7)
+    # Customize title and labels
+    ax.set_title('Message Activity Throughout the Day',
+                 pad=20,
+                 fontsize=style.title_size,
+                 color=style.text_color)
+    ax.set_xlabel('Hour of Day',
+                  fontsize=style.label_size,
+                  color=style.text_color)
+    ax.set_ylabel('Number of Messages',
+                  fontsize=style.label_size,
+                  color=style.text_color)
 
-    # Add peak hour line
-    plt.axvline(x=stats.peak_hour,
-                color=style.peak_line_color,
-                linestyle='--',
-                linewidth=2)
-    plt.text(stats.peak_hour,
-             plt.ylim()[1],
-             f'Peak Hour: {stats.peak_hour:02d}:00',
-             ha='center',
-             va='bottom',
-             color=style.peak_line_color,
-             fontsize=style.tick_size,
-             fontweight='bold')
+    # Customize ticks
+    ax.set_xticks(range(24))
+    ax.set_xticklabels([f'{hour:02d}:00' for hour in range(24)],
+                       rotation=45,
+                       ha='right',
+                       fontsize=style.tick_size)
+    ax.tick_params(axis='both', colors=style.text_color)
 
-    # Save the plot
+    # Add summary statistics
+    summary_text = (
+        f'Total Messages: {total_messages:,}\n'
+        f'Period: {start_date.strftime("%Y-%m-%d")} to {end_date.strftime("%Y-%m-%d")}'
+    )
+    plt.figtext(0.99, 0.02,
+                summary_text,
+                ha='right',
+                va='bottom',
+                fontsize=style.annotation_size,
+                color=style.text_color)
+
+    # Add legend
+    ax.legend(fontsize=style.annotation_size)
+
+    # Adjust layout and save
     plt.tight_layout()
-    plt.savefig(output_path, dpi=style.dpi, bbox_inches='tight')
+    plt.savefig(output_path,
+                dpi=style.dpi,
+                bbox_inches='tight',
+                facecolor=style.background_color)
     plt.close()
 
-    print(f"Visualization saved as '{output_path}'")
-    return stats
+    print(f"Modern visualization saved as '{output_path}'")
