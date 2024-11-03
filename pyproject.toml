@@ -27,7 +27,8 @@ dependencies = [
     "vaderSentiment",
     "pyarrow",
     "fastparquet",
-    "spacy"
+    "spacy",
+    "streamlit"
 ]
 
 [project.scripts]

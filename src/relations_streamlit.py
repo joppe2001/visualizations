@@ -14,7 +14,7 @@ from sklearn.preprocessing import MinMaxScaler
 
 # Constants
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
-DATA_PATH = os.path.join(CURRENT_DIR, '..', 'data', 'processed', 'whatsapp-20241014-233116.csv')
+DATA_PATH = os.path.join(CURRENT_DIR, '..', 'data', 'processed', 'whatsapp-20241023-185534.csv')
 
 
 def load_data(file_path):

@@ -358,3 +358,126 @@ class BasePlotter:
 
         if output_path:
             self.save_plot(output_path)
+
+    # Add these methods to your existing BasePlotter class
+
+    def create_scatter_plot(self,
+                            data: pd.DataFrame,
+                            x: str,
+                            y: str,
+                            title: str,
+                            xlabel: Optional[str] = None,
+                            ylabel: Optional[str] = None,
+                            hue: Optional[str] = None,
+                            output_path: Optional[str] = None) -> None:
+        """Create scatter plot with optional trend line."""
+        fig, ax = self.setup_figure(title)
+
+        sns.scatterplot(
+            data=data,
+            x=x,
+            y=y,
+            hue=hue,
+            alpha=0.6,
+            ax=ax
+        )
+
+        # Add trend line
+        sns.regplot(
+            data=data,
+            x=x,
+            y=y,
+            scatter=False,
+            color='red',
+            line_kws={'linestyle': '--'},
+            ax=ax
+        )
+
+        ax.set_xlabel(xlabel or x)
+        ax.set_ylabel(ylabel or y)
+
+        if output_path:
+            self.save_plot(output_path)
+
+    def create_line_plot(self,
+                         data: Union[pd.Series, List],
+                         title: str,
+                         xlabel: Optional[str] = None,
+                         ylabel: Optional[str] = None,
+                         output_path: Optional[str] = None) -> None:
+        """Create line plot for temporal data."""
+        fig, ax = self.setup_figure(title)
+
+        if isinstance(data, pd.Series):
+            ax.plot(data.index, data.values,
+                    color=self.settings['colors']['line'],
+                    linewidth=2)
+        else:
+            ax.plot(range(len(data)), data,
+                    color=self.settings['colors']['line'],
+                    linewidth=2)
+
+        ax.set_xlabel(xlabel or "Index")
+        ax.set_ylabel(ylabel or "Value")
+
+        if output_path:
+            self.save_plot(output_path)
+
+    def create_bar_plot(self,
+                        data: Union[pd.Series, dict],
+                        title: str,
+                        xlabel: Optional[str] = None,
+                        ylabel: Optional[str] = None,
+                        horizontal: bool = False,
+                        output_path: Optional[str] = None) -> None:
+        """Create bar plot with consistent styling."""
+        fig, ax = self.setup_figure(title)
+
+        if isinstance(data, pd.Series):
+            plot_data = data
+        else:
+            plot_data = pd.Series(data)
+
+        if horizontal:
+            plot_data.plot(
+                kind='barh',
+                ax=ax,
+                color=self.settings['colors']['positive']
+            )
+        else:
+            plot_data.plot(
+                kind='bar',
+                ax=ax,
+                color=self.settings['colors']['positive']
+            )
+
+        ax.set_xlabel(xlabel or "Category")
+        ax.set_ylabel(ylabel or "Value")
+
+        if not horizontal:
+            plt.xticks(rotation=45, ha='right')
+
+        if output_path:
+            self.save_plot(output_path)
+
+    def create_joint_plot(self,
+                          data: pd.DataFrame,
+                          x: str,
+                          y: str,
+                          title: str,
+                          kind: str = 'scatter',
+                          output_path: Optional[str] = None) -> None:
+        """Create joint plot (scatter with distributions)."""
+        g = sns.jointplot(
+            data=data,
+            x=x,
+            y=y,
+            kind=kind,
+            height=self.settings['figure_size'][0] * 0.8
+        )
+
+        g.fig.suptitle(title, y=1.02)
+
+        if output_path:
+            g.savefig(output_path, dpi=self.settings['dpi'], bbox_inches='tight')
+            plt.close()

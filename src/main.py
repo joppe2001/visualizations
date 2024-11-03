@@ -6,6 +6,7 @@ from emoji_use import EmojiAnalyzer, ModernChartStyle, ChartConfig, ColumnConfig
 from timestamp import visualize_hourly_activity
 from distribution import SentimentAnalyzer, BasePlotter, ColumnConfig
 from dimensionality import DimensionalityAnalyzer, ClusteringConfig, VectorizerConfig, VisualizationConfig, KeywordExtractionConfig
+from relationships import SentimentTimeAnalyzer
 
 
 def load_data(file_path):
@@ -111,7 +112,7 @@ def create_text_clusters(df: pd.DataFrame, image_dir) -> None:
         # Initialize analyzer with chat-optimized settings
         analyzer = DimensionalityAnalyzer(
             clustering_config=ClusteringConfig(
-                n_clusters=6,  # Create 6 main topics
+                n_clusters=10,  # Create 6 main topics
                 random_state=42
             ),
             vectorizer_config=VectorizerConfig(
@@ -146,6 +147,21 @@ def create_text_clusters(df: pd.DataFrame, image_dir) -> None:
         traceback.print_exc()
 
 
+def create_sentiment_time_analysis(df, image_dir):
+    """Generate sentiment analysis across time periods."""
+    analyzer = SentimentTimeAnalyzer(
+        plotter=BasePlotter(
+            preset='minimal',
+            figure_size=(12, 8)
+        )
+    )
+
+    sentiment_dir = image_dir / 'sentiment_time'
+    results = analyzer.analyze(df, sentiment_dir)
+    click.echo(f"Sentiment-time analysis saved in {sentiment_dir}")
+    return results
+
+
 @click.group()
 def cli():
     """WhatsApp Chat Analysis Tool - Choose a visualization to generate."""
@@ -168,7 +184,8 @@ def visualize(all):
         2: ("Emoji Usage Chart", create_emoji_usage),
         3: ("Hourly Activity Visualization", create_hourly_activity),
         4: ("Sentiment Analysis", create_sentiment_analysis),
-        5: ("Text Clustering", create_text_clusters),  # New option
+        5: ("Text Clustering", create_text_clusters),
+        6: ("Sentiment Time Analysis", create_sentiment_time_analysis)
     }
 
     if all:
