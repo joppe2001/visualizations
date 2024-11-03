@@ -4,18 +4,11 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="05669844-06a4-4701-8737-8901d52d5e23" name="Changes" comment="Delete unused images, add new report documents, and enhance emoji analysis&#10;&#10;Removed obsolete images related to clustering. Added comprehensive EMOJI.md and TEMPORAL.md reports. Enhanced emoji analysis in emoji_use.py with modern styling, additional pattern analysis, and detailed annotations. Also added dependency 'spacy' in pyproject.toml and improved text processing and clustering functionality in dimensionality.py.">
-      <change afterPath="$PROJECT_DIR$/reports/DIMVIS.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/reports/RELATIONS.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/reports/SENTIMENT.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/reports/create_png.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/relationships.py" afterDir="false" />
+    <list default="true" id="05669844-06a4-4701-8737-8901d52d5e23" name="Changes" comment="Add sentiment-time analysis and visualization features&#10;&#10;Introduced a new module `relationships.py` for sentiment analysis over time. Created detailed sentiment reports with visual findings. Updated dependencies and included Streamlit for interactive visualizations. Enhanced `dimensionality.py` for better keyword extraction and added functionality to convert Markdown reports to images.">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pyproject.toml" beforeDir="false" afterPath="$PROJECT_DIR$/pyproject.toml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/base_plotter.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/base_plotter.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/dimensionality.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/dimensionality.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/main.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/relations_streamlit.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/relations_streamlit.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/reports/REPORT.md" beforeDir="false" afterPath="$PROJECT_DIR$/reports/REPORT.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/reports/create_png.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/dimvis.py" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -101,7 +94,7 @@
       <workItem from="1730104820197" duration="17117000" />
       <workItem from="1730277662723" duration="203000" />
       <workItem from="1730281821962" duration="6297000" />
-      <workItem from="1730641690531" duration="18781000" />
+      <workItem from="1730641690531" duration="21039000" />
     </task>
     <task id="LOCAL-00001" summary="Update .idea/workspace.xml and clean up src/timestamp.py&#10;&#10;Remove unnecessary changes from .idea/workspace.xml and comment from visualize_hourly_activity in src/timestamp.py. This improves clarity and maintainability.">
       <option name="closed" value="true" />
@@ -135,7 +128,15 @@
       <option name="project" value="LOCAL" />
       <updated>1730654025342</updated>
     </task>
-    <option name="localTasksCounter" value="5" />
+    <task id="LOCAL-00005" summary="Add sentiment-time analysis and visualization features&#10;&#10;Introduced a new module `relationships.py` for sentiment analysis over time. Created detailed sentiment reports with visual findings. Updated dependencies and included Streamlit for interactive visualizations. Enhanced `dimensionality.py` for better keyword extraction and added functionality to convert Markdown reports to images.">
+      <option name="closed" value="true" />
+      <created>1730662211718</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1730662211718</updated>
+    </task>
+    <option name="localTasksCounter" value="6" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -146,6 +147,10 @@
     <MESSAGE value="Update workspace and clean settings&#10;&#10;Revised changes in .idea/workspace.xml, improved docstring format in visualizations.iml, and cleaned up imports in src/main.py for better code clarity and maintenance." />
     <MESSAGE value="Refactor and enhance timestamp visualization&#10;&#10;Updated `visualize_hourly_activity` to include modern styling, a smooth non-negative trend line, and improved data visualization and annotation. Cleaned up unused imports and improved the chart configuration for better readability and maintainability. Changed styling class and method signatures for better clarity." />
     <MESSAGE value="Delete unused images, add new report documents, and enhance emoji analysis&#10;&#10;Removed obsolete images related to clustering. Added comprehensive EMOJI.md and TEMPORAL.md reports. Enhanced emoji analysis in emoji_use.py with modern styling, additional pattern analysis, and detailed annotations. Also added dependency 'spacy' in pyproject.toml and improved text processing and clustering functionality in dimensionality.py." />
-    <option name="LAST_COMMIT_MESSAGE" value="Delete unused images, add new report documents, and enhance emoji analysis&#10;&#10;Removed obsolete images related to clustering. Added comprehensive EMOJI.md and TEMPORAL.md reports. Enhanced emoji analysis in emoji_use.py with modern styling, additional pattern analysis, and detailed annotations. Also added dependency 'spacy' in pyproject.toml and improved text processing and clustering functionality in dimensionality.py." />
+    <MESSAGE value="Add sentiment-time analysis and visualization features&#10;&#10;Introduced a new module `relationships.py` for sentiment analysis over time. Created detailed sentiment reports with visual findings. Updated dependencies and included Streamlit for interactive visualizations. Enhanced `dimensionality.py` for better keyword extraction and added functionality to convert Markdown reports to images." />
+    <option name="LAST_COMMIT_MESSAGE" value="Add sentiment-time analysis and visualization features&#10;&#10;Introduced a new module `relationships.py` for sentiment analysis over time. Created detailed sentiment reports with visual findings. Updated dependencies and included Streamlit for interactive visualizations. Enhanced `dimensionality.py` for better keyword extraction and added functionality to convert Markdown reports to images." />
+  </component>
+  <component name="com.intellij.coverage.CoverageDataManagerImpl">
+    <SUITE FILE_PATH="coverage/visualizations$create_png.coverage" NAME="create_png Coverage Results" MODIFIED="1730662359032" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/reports" />
   </component>
 </project>

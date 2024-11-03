@@ -21,3 +21,6 @@ This comprehensive analysis not only provides insights into modern communication
 The following sections will present each analysis in detail, accompanied by visualizations and discussions of the patterns and insights discovered. Through this exploration, we aim to shed light on how digital communication tools shape and reflect our daily interactions.
 
 I have also taken it upon myself to add a config handler to reduce hardcoding across the project
+
+
+### [github url](https://github.com/joppe2001/visualizations)
