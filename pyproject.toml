@@ -26,7 +26,8 @@ dependencies = [
     "tomli",
     "vaderSentiment",
     "pyarrow",
-    "fastparquet"
+    "fastparquet",
+    "spacy"
 ]
 
 [project.scripts]

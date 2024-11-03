@@ -2,10 +2,10 @@ import pandas as pd
 import click
 from config_handler import ConfigHandler
 from visualization import create_simple_message_frequency_plot
-from emoji_use import EmojiAnalyzer, ChartConfig, OutputConfig
+from emoji_use import EmojiAnalyzer, ModernChartStyle, ChartConfig, ColumnConfigEmoji, EmojiStats
 from timestamp import visualize_hourly_activity
 from distribution import SentimentAnalyzer, BasePlotter, ColumnConfig
-from dimensionality import process_text_for_viz  # New import
+from dimensionality import DimensionalityAnalyzer, ClusteringConfig, VectorizerConfig, VisualizationConfig, KeywordExtractionConfig
 
 
 def load_data(file_path):
@@ -22,59 +22,49 @@ def create_message_frequency(df, image_dir):
     click.echo(f"Message frequency plot saved as {output_path}")
 
 
-def create_emoji_usage(df, image_dir):
-    """Generate emoji usage visualization with custom settings."""
-    # Initialize plotter with desired style
-    plotter = BasePlotter(
-        preset='minimal',
-        figure_size=(12, 8),
-        style='seaborn-v0_8-whitegrid'
+def create_emoji_usage(df: pd.DataFrame, image_dir) -> EmojiStats:
+    """Generate comprehensive emoji usage visualization with modern styling."""
+    print("Available columns:", df.columns.tolist())
+    # Create modern styling configuration
+    style = ModernChartStyle(
+        figure_size=(14, 8),
+        primary_color='#4361ee',
+        secondary_color='#e74c3c',
+        background_color='#f8f9fa',
+        grid_color='#dee2e6',
+        text_color='#2d3436',
+        title_size=20,
+        label_size=14,
+        tick_size=12,
+        annotation_size=10,
+        dpi=300
     )
 
     # Custom chart configuration
     chart_config = ChartConfig(
-        title='Emoji Usage in Chat Messages',
+        title='Emoji Usage Patterns in Communication',
         xlabel='Chat Participant',
-        ylabel='Emoji Usage (%)',
-        figure_size=(14, 7),
-        annotation_settings={
-            'percentage': {
-                'fontweight': 'bold',
-                'va': 'bottom',
-                'ha': 'center',
-                'fontsize': 11
-            },
-            'count': {
-                'size': 9,
-                'va': 'top',
-                'ha': 'center',
-                'color': 'gray'
-            }
-        }
-    )
-
-    # Custom output configuration
-    output_config = OutputConfig(
-        round_digits=1,
-        print_summary=True,
-        save_chart=True
+        ylabel='Percentage of Messages with Emojis'
     )
 
     # Initialize analyzer with configurations
+    columns = ColumnConfigEmoji()
     analyzer = EmojiAnalyzer(
-        chart_config=chart_config,
-        output_config=output_config,
-        plotter=plotter
+        style=style,
+        columns=columns,
+        chart_config=chart_config
     )
 
     # Set output path and run analysis
-    output_path = image_dir / 'emoji_usage.jpg'
-    stats = analyzer.analyze(df, str(output_path))
+    output_path = image_dir / 'emoji_usage.png'
+    stats = analyzer.create_visualization(df, str(output_path))
 
-    # Print additional insights if desired
-    click.echo(f"Emoji usage chart saved as {output_path}")
-    click.echo(f"Total messages analyzed: {stats.total_messages}")
-    click.echo(f"Messages with emojis: {stats.emoji_messages} ({stats.percentage:.1f}%)")
+    # Print insights
+    click.echo(f"\nEmoji Usage Analysis Results:")
+    click.echo("-" * 30)
+    click.echo(f"Visualization saved as: {output_path}")
+    click.echo(f"Total messages analyzed: {stats.total_messages:,}")
+    click.echo(f"Messages containing emojis: {stats.emoji_messages:,} ({stats.percentage:.1f}%)")
 
     return stats
 
@@ -109,59 +99,51 @@ def create_sentiment_analysis(df, image_dir):
     return results
 
 
-def create_text_clusters(df, image_dir):
-    """Generate text clustering visualizations using dimension reduction."""
-    dim_red_dir = image_dir / 'text_clusters'
-    dim_red_dir.mkdir(exist_ok=True)
+def create_text_clusters(df: pd.DataFrame, image_dir) -> None:
+    """Generate text clustering visualizations with main conversation topics."""
+    try:
+        print("\nGenerating topic analysis visualizations...")
 
-    click.echo("Starting text clustering analysis...")
-    click.echo("Note: This may take several minutes for large datasets.")
+        # Create directory for cluster visualizations
+        cluster_dir = image_dir / 'text_clusters'
+        cluster_dir.mkdir(exist_ok=True, parents=True)
 
-    # Initialize plotter
-    plotter = BasePlotter(preset='minimal', figure_size=(10, 8))
-
-    # Process with t-SNE first (most time-consuming)
-    with click.progressbar(
-            length=1,
-            label='Generating t-SNE visualization'
-    ) as bar:
-        click.echo("\nAnalyzing t-SNE clusters...")
-        tsne_data = process_text_for_viz(
-            texts=df['message'].tolist(),
-            authors=df['author'].tolist(),
-            method='tsne',
-            analyze_clusters=True,  # Add this parameter
-            sample_size=60000
+        # Initialize analyzer with chat-optimized settings
+        analyzer = DimensionalityAnalyzer(
+            clustering_config=ClusteringConfig(
+                n_clusters=6,  # Create 6 main topics
+                random_state=42
+            ),
+            vectorizer_config=VectorizerConfig(
+                min_df=10,  # Words must appear in at least 10 messages
+                max_features=3000,
+                stop_words='english',
+                ngram_range=(1, 2)  # Use both single words and pairs
+            ),
+            viz_config=VisualizationConfig(
+                figure_size=(15, 10),
+                dpi=300,
+                cmap='tab10',
+                alpha=0.6
+            ),
+            keyword_config=KeywordExtractionConfig(
+                n_keywords=8,  # Show top 8 keywords per topic
+                min_df=5
+            )
         )
 
-        plotter.create_dim_reduction_plot(
-            data=tsne_data,
-            title='Message Clustering by t-SNE (Sampled Data)',
-            output_path=str(dim_red_dir / 'tsne_clusters.jpg')
-        )
-        bar.update(1)
+        # Run analysis
+        analyzer.analyze_and_visualize(df, cluster_dir)
 
-    # Process with PCA (much faster)
-    with click.progressbar(
-            length=1,
-            label='Generating PCA visualization'
-    ) as bar:
-        click.echo("\nAnalyzing PCA clusters...")
-        pca_data = process_text_for_viz(
-            texts=df['message'].tolist(),
-            authors=df['author'].tolist(),
-            method='pca',
-            analyze_clusters=True  # Add this parameter
-        )
+        print(f"\nVisualizations saved in: {cluster_dir}")
+        print("Generated files:")
+        print(f"- PCA topic visualization: {cluster_dir / 'pca_topics.png'}")
+        print(f"- t-SNE topic visualization: {cluster_dir / 'tsne_topics.png'}")
 
-        plotter.create_dim_reduction_plot(
-            data=pca_data,
-            title='Message Clustering by PCA (Sampled Data)',
-            output_path=str(dim_red_dir / 'pca_clusters.jpg')
-        )
-        bar.update(1)
-
-    click.echo(f"Text clustering visualizations saved in {dim_red_dir}")
+    except Exception as e:
+        print(f"\nError generating topic analysis: {str(e)}")
+        import traceback
+        traceback.print_exc()
 
 
 @click.group()

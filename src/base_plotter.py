@@ -6,6 +6,7 @@ import pandas as pd
 from typing import List, Tuple, Optional, Union
 import os
 from dataclasses import dataclass
+from pathlib import Path
 
 
 @dataclass
@@ -248,49 +249,63 @@ class BasePlotter:
 
             # Add this method at the end of the BasePlotter class
 
-    def create_dim_reduction_plot(self,
-                                  data: DimReductionData,
-                                  title: str,
-                                  alpha: float = 0.6,
-                                  point_size: int = 100,
-                                  add_legend: bool = True,
-                                  output_path: Optional[str] = None) -> None:
-        fig, ax = self.setup_figure(title)
+    # In base_plotter.py or wherever your BasePlotter is defined
+    class BasePlotter:
+        def create_dim_reduction_plot(self, data, title: str, output_path: str):
+            """Create dimensionality reduction plot with error handling."""
+            try:
+                print(f"Starting to create plot: {title}")
+                print(f"Data shape: {data.embedded_data.shape}")
+                print(f"Output path: {output_path}")
 
-        # Create scatter plot with unique colors for each label
-        scatter = ax.scatter(
-            data.embedded_data[:, 0],
-            data.embedded_data[:, 1],
-            c=pd.factorize(data.labels)[0],
-            alpha=alpha,
-            s=point_size,
-            cmap='tab20'  # Use a colormap that works well with multiple categories
-        )
+                plt.figure(figsize=self.figure_size)
 
-        # Add legend if requested
-        if add_legend:
-            legend = ax.legend(
-                scatter.legend_elements()[0],
-                np.unique(data.labels),
-                title="Labels",
-                loc="upper right"
-            )
-            ax.add_artist(legend)
+                if hasattr(data, 'clusters') and data.clusters is not None:
+                    scatter = plt.scatter(
+                        data.embedded_data[:, 0],
+                        data.embedded_data[:, 1],
+                        c=data.clusters,
+                        cmap='tab20',
+                        alpha=0.6
+                    )
+                    plt.colorbar(scatter, label='Clusters')
+                else:
+                    plt.scatter(
+                        data.embedded_data[:, 0],
+                        data.embedded_data[:, 1],
+                        alpha=0.6
+                    )
 
-        # Add explained variance if available
-        if data.explained_variance is not None:
-            subtitle = f'Explained Variance: {data.explained_variance:.2%}'
-            ax.text(0.02, 0.98, subtitle,
-                    transform=ax.transAxes,
-                    verticalalignment='top')
+                plt.title(title)
+                plt.xlabel('Dimension 1')
+                plt.ylabel('Dimension 2')
 
-        # Set labels
-        ax.set_xlabel('First Component')
-        ax.set_ylabel('Second Component')
+                if hasattr(data, 'explained_variance') and data.explained_variance is not None:
+                    plt.suptitle(f'Explained variance: {data.explained_variance:.2%}')
 
-        # Save if path provided
-        if output_path:
-            self.save_plot(output_path)
+                plt.tight_layout()
+
+                # Ensure the directory exists
+                output_path = Path(output_path)
+                output_path.parent.mkdir(parents=True, exist_ok=True)
+
+                print(f"Saving plot to: {output_path}")
+                plt.savefig(str(output_path), dpi=300, bbox_inches='tight')
+                print(f"Plot saved successfully to: {output_path}")
+                plt.close()
+
+                # Verify file was created
+                if output_path.exists():
+                    print(f"Verified: File exists at {output_path}")
+                    print(f"File size: {output_path.stat().st_size} bytes")
+                else:
+                    print(f"Warning: File was not created at {output_path}")
+
+            except Exception as e:
+                print(f"Error in create_dim_reduction_plot: {str(e)}")
+                import traceback
+                traceback.print_exc()
+                raise  # Re-raise the exception for the calling code
 
     def create_boxplot(self,
                        data: pd.DataFrame,

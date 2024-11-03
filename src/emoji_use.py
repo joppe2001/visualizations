@@ -1,24 +1,41 @@
 from dataclasses import dataclass
 import pandas as pd
 import matplotlib.pyplot as plt
-from base_plotter import BasePlotter
+import seaborn as sns
 from typing import Tuple, Dict, Optional, List
+from base_plotter import BasePlotter
 
 
 @dataclass
-class ColumnConfig:
+class ModernChartStyle:
+    """Configuration for modern chart appearance following visualization principles."""
+    figure_size: Tuple[int, int] = (14, 8)
+    primary_color: str = '#4361ee'
+    secondary_color: str = '#e74c3c'
+    background_color: str = '#f8f9fa'
+    grid_color: str = '#dee2e6'
+    text_color: str = '#2d3436'
+    title_size: int = 20
+    label_size: int = 14
+    tick_size: int = 12
+    annotation_size: int = 10
+    dpi: int = 300
+
+
+@dataclass
+class ColumnConfigEmoji:
     """Configuration for DataFrame column names"""
     author: str = 'author'
     has_emoji: str = 'has_emoji'
+    message: str = 'message'  # Added for emoji pattern analysis
 
 
 @dataclass
 class ChartConfig:
     """Configuration for chart appearance and settings"""
-    title: str = 'Emoji Usage by Author'
-    xlabel: str = 'Author'
-    ylabel: str = 'Percentage'
-    figure_size: Tuple[int, int] = (12, 6)
+    title: str = 'Emoji Usage Patterns in Communication'
+    xlabel: str = 'Participant'
+    ylabel: str = 'Percentage of Messages with Emojis'
     annotation_settings: Dict = None
 
     def __post_init__(self):
@@ -26,10 +43,11 @@ class ChartConfig:
             'percentage': {
                 'fontweight': 'bold',
                 'va': 'bottom',
-                'ha': 'center'
+                'ha': 'center',
+                'fontsize': 12
             },
             'count': {
-                'size': 10,
+                'fontsize': 10,
                 'va': 'top',
                 'ha': 'center'
             }
@@ -37,143 +55,160 @@ class ChartConfig:
 
 
 @dataclass
-class OutputConfig:
-    """Configuration for output formatting"""
-    round_digits: int = 1
-    print_summary: bool = True
-    save_chart: bool = True
-
-
-@dataclass
 class EmojiStats:
-    """Container for emoji statistics results"""
+    """Container for comprehensive emoji statistics"""
     total_messages: int
     emoji_messages: int
     percentage: float
     by_author: pd.Series
+    most_used_emojis: Dict[str, int]
+    emoji_frequency: Dict[str, float]
+    patterns: Dict[str, any]
 
 
 class EmojiAnalyzer:
-    """Analyze emoji usage in WhatsApp messages"""
+    """Analyze emoji usage patterns in communication"""
 
     def __init__(self,
-                 columns: Optional[ColumnConfig] = None,
-                 chart_config: Optional[ChartConfig] = None,
-                 output_config: Optional[OutputConfig] = None,
-                 plotter: Optional[BasePlotter] = None):
-        """
-        Initialize analyzer with custom configurations.
-
-        Example:
-            analyzer = EmojiAnalyzer(
-                chart_config=ChartConfig(
-                    title='Emoji Distribution',
-                    figure_size=(15, 8)
-                )
-            )
-        """
-        self.cols = columns or ColumnConfig()
+                 style: Optional[ModernChartStyle] = None,
+                 columns: Optional[ColumnConfigEmoji] = None,
+                 chart_config: Optional[ChartConfig] = None):
+        """Initialize analyzer with modern styling and configurations"""
+        self.style = style or ModernChartStyle()
+        self.cols = columns or ColumnConfigEmoji()
         self.chart_config = chart_config or ChartConfig()
-        self.output_config = output_config or OutputConfig()
-        self.plotter = plotter or BasePlotter(preset='minimal')
 
-    def calculate_statistics(self, df: pd.DataFrame) -> Tuple[pd.Series, pd.Series, pd.Series]:
-        """Calculate basic emoji usage statistics"""
+        # Set the visual style
+        plt.style.use('seaborn-v0_8-whitegrid')
+
+    def analyze_emoji_patterns(self, df: pd.DataFrame) -> Dict[str, any]:
+        """Analyze deeper patterns in emoji usage"""
+        patterns = {
+            'time_of_day': self._analyze_time_patterns(df),
+            'message_length': self._analyze_message_length_correlation(df),
+            # 'response_time': self._analyze_response_patterns(df)
+        }
+        return patterns
+
+    def _analyze_time_patterns(self, df: pd.DataFrame) -> Dict:
+        """Analyze emoji usage patterns by time of day"""
+        df['hour'] = pd.to_datetime(df['timestamp']).dt.hour
+        emoji_by_hour = df[df[self.cols.has_emoji]].groupby('hour').size()
+        total_by_hour = df.groupby('hour').size()
+        percentage_by_hour = (emoji_by_hour / total_by_hour * 100).round(1)
+
+        return {
+            'peak_hour': percentage_by_hour.idxmax(),
+            'peak_percentage': percentage_by_hour.max(),
+            'low_hour': percentage_by_hour.idxmin(),
+            'low_percentage': percentage_by_hour.min()
+        }
+
+    def _analyze_message_length_correlation(self, df: pd.DataFrame) -> Dict:
+        """Analyze correlation between message length and emoji usage"""
+        df['message_length'] = df[self.cols.message].str.len()
+        avg_length_with_emoji = df[df[self.cols.has_emoji]]['message_length'].mean()
+        avg_length_without_emoji = df[~df[self.cols.has_emoji]]['message_length'].mean()
+
+        return {
+            'avg_length_with_emoji': round(avg_length_with_emoji, 1),
+            'avg_length_without_emoji': round(avg_length_without_emoji, 1)
+        }
+
+    def create_visualization(self, df: pd.DataFrame, output_path: str) -> EmojiStats:
+        """Create comprehensive emoji usage visualization with modern styling"""
+        """Create comprehensive emoji usage visualization with modern styling"""
+        # Debug prints
+        print("ColumnConfig attributes:", dir(self.cols))
+        print("has_emoji attribute value:", getattr(self.cols, 'has_emoji', None))
+        # Calculate basic statistics
         total_by_author = df.groupby(self.cols.author).size()
         emoji_by_author = df[df[self.cols.has_emoji]].groupby(self.cols.author).size()
-        percentage_by_author = (emoji_by_author / total_by_author * 100).round(
-            self.output_config.round_digits
-        )
+        percentage_by_author = (emoji_by_author / total_by_author * 100).round(1)
 
-        return total_by_author, emoji_by_author, percentage_by_author
+        # Create figure with modern styling
+        fig, ax = plt.subplots(figsize=self.style.figure_size,
+                               facecolor=self.style.background_color)
+        ax.set_facecolor(self.style.background_color)
 
-    def create_stats_summary(self, df: pd.DataFrame, emoji_by_author: pd.Series) -> EmojiStats:
-        """Create summary statistics object"""
-        total_emoji_messages = emoji_by_author.sum()
-        overall_percentage = (total_emoji_messages / len(df) * 100).round(
-            self.output_config.round_digits
-        )
+        # Create enhanced bar chart
+        bars = ax.bar(percentage_by_author.index,
+                      percentage_by_author.values,
+                      color=self.style.primary_color,
+                      alpha=0.7)
+
+        # Add detailed annotations
+        self._add_enhanced_annotations(ax, percentage_by_author, total_by_author, emoji_by_author)
+
+        # Customize appearance
+        self._customize_chart(ax)
+
+        # Add informative title and labels
+        plt.title(self.chart_config.title,
+                  pad=20,
+                  fontsize=self.style.title_size,
+                  color=self.style.text_color)
+        plt.xlabel(self.chart_config.xlabel,
+                   fontsize=self.style.label_size,
+                   color=self.style.text_color)
+        plt.ylabel(self.chart_config.ylabel,
+                   fontsize=self.style.label_size,
+                   color=self.style.text_color)
+
+        # Add summary statistics
+        patterns = self.analyze_emoji_patterns(df)
+        self._add_summary_statistics(df, emoji_by_author, patterns)
+
+        # Save visualization
+        plt.tight_layout(rect=[0, 0.1, 1, 1])
+        plt.savefig(output_path,
+                    dpi=self.style.dpi,
+                    bbox_inches='tight',
+                    facecolor=self.style.background_color)
+        plt.close()
 
         return EmojiStats(
             total_messages=len(df),
-            emoji_messages=total_emoji_messages,
-            percentage=overall_percentage,
-            by_author=emoji_by_author
+            emoji_messages=emoji_by_author.sum(),
+            percentage=(emoji_by_author.sum() / len(df) * 100).round(1),
+            by_author=emoji_by_author,
+            most_used_emojis=self._get_most_used_emojis(df),
+            emoji_frequency=self._calculate_emoji_frequency(df),
+            patterns=patterns
         )
 
-    def prepare_chart_data(self, percentage_by_author: pd.Series) -> pd.DataFrame:
-        """Prepare data for visualization"""
-        return pd.DataFrame({
-            'Author': percentage_by_author.index,
-            'Percentage': percentage_by_author.values
-        })
-
-    def add_annotations(self,
-                        ax: plt.Axes,
-                        percentage_by_author: pd.Series,
-                        total_by_author: pd.Series,
-                        emoji_by_author: pd.Series) -> None:
-        """Add percentage and count annotations to bars"""
-        bars = ax.containers[0]
-        for i, bar in enumerate(bars):
+    def _add_enhanced_annotations(self, ax, percentage_by_author, total_by_author, emoji_by_author):
+        """Add detailed annotations to the visualization"""
+        for i, v in enumerate(percentage_by_author):
             author = percentage_by_author.index[i]
-            height = bar.get_height()
+            ax.text(i, v + 1, f'{v}%',
+                    **self.chart_config.annotation_settings['percentage'])
+            ax.text(i, -3,
+                    f'{emoji_by_author[author]} of {total_by_author[author]}',
+                    **self.chart_config.annotation_settings['count'])
 
-            # Add percentage on top
-            ax.text(
-                bar.get_x() + bar.get_width() / 2.,
-                height,
-                f'{height}%',
-                **self.chart_config.annotation_settings['percentage']
-            )
-
-            # Add message count below
-            ax.text(
-                bar.get_x() + bar.get_width() / 2.,
-                -3,
-                f'{emoji_by_author[author]} of {total_by_author[author]} messages',
-                **self.chart_config.annotation_settings['count']
-            )
-
-    def customize_layout(self, ax: plt.Axes) -> None:
-        """Apply custom layout settings"""
+    def _customize_chart(self, ax):
+        """Apply modern chart styling"""
+        ax.grid(True, axis='y', alpha=0.3, color=self.style.grid_color)
+        ax.set_axisbelow(True)
+        ax.spines['top'].set_visible(False)
+        ax.spines['right'].set_visible(False)
+        ax.spines['left'].set_color(self.style.grid_color)
+        ax.spines['bottom'].set_color(self.style.grid_color)
+        ax.tick_params(axis='both', colors=self.style.text_color)
         ax.margins(y=0.2)
-        plt.subplots_adjust(bottom=0.2)
 
-    def analyze(self, df: pd.DataFrame, output_path: str) -> EmojiStats:
-        """
-        Run complete emoji analysis pipeline.
-
-        Args:
-            df: DataFrame containing message data
-            output_path: Path to save visualization
-
-        Returns:
-            EmojiStats object containing analysis results
-        """
-        # Calculate statistics
-        total_by_author, emoji_by_author, percentage_by_author = self.calculate_statistics(df)
-        stats = self.create_stats_summary(df, emoji_by_author)
-
-        # Create visualization
-        if self.output_config.save_chart:
-            chart_data = self.prepare_chart_data(percentage_by_author)
-
-            self.plotter.create_barchart(
-                data=chart_data,
-                title=self.chart_config.title,
-                xlabel=self.chart_config.xlabel,
-                ylabel=self.chart_config.ylabel
-            )
-
-            ax = plt.gca()
-            self.add_annotations(ax, percentage_by_author, total_by_author, emoji_by_author)
-            self.customize_layout(ax)
-            self.plotter.save_plot(output_path)
-
-        # Print summary if enabled
-        if self.output_config.print_summary:
-            print(f"Total messages with emojis: {stats.emoji_messages}")
-            print(f"Percentage of messages with emojis: {stats.percentage:.1f}%")
-
-        return stats
+    def _add_summary_statistics(self, df, emoji_by_author, patterns):
+        """Add comprehensive summary statistics to the visualization"""
+        summary_text = (
+            f'Total Messages: {len(df):,}\n'
+            f'Messages with Emojis: {emoji_by_author.sum():,} ({(emoji_by_author.sum() / len(df) * 100):.1f}%)\n'
+            f'Peak Emoji Usage: {patterns["time_of_day"]["peak_hour"]:02d}:00 ({patterns["time_of_day"]["peak_percentage"]:.1f}%)\n'
+            f'Avg Message Length with Emoji: {patterns["message_length"]["avg_length_with_emoji"]:.1f} chars'
+        )
+        plt.figtext(0.99, 0.05,
+                    summary_text,
+                    ha='right',
+                    va='bottom',
+                    fontsize=self.style.annotation_size,
+                    color=self.style.text_color)
