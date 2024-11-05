@@ -194,17 +194,27 @@ class BasePlotter:
 
     def create_distribution(self,
                             data: pd.Series,
-                            title: str,
+                            title: Union[str, dict[str, str]],
                             xlabel: str,
                             ylabel: str = 'Frequency',
                             bins: int = 50,
                             kde: bool = True,
                             output_path: Optional[str] = None) -> None:
-        """Create a distribution plot with consistent styling"""
-        fig, ax = self.setup_figure(title)
+        """Create a distribution plot with consistent styling and sentiment indicator"""
+        fig, ax = self.setup_figure(title if isinstance(title, str) else title['title'])
+
+        # Plot the distribution
         sns.histplot(data=data, bins=bins, kde=kde, ax=ax)
         ax.set_xlabel(xlabel)
         ax.set_ylabel(ylabel)
+
+        # Add subtitle with sentiment indicator if provided
+        if isinstance(title, dict) and 'subtitle' in title:
+            ax.text(0.5, 1.05, title['subtitle'],
+                    horizontalalignment='center',
+                    transform=ax.transAxes,
+                    fontsize=10,
+                    fontweight='bold')
 
         if output_path:
             self.save_plot(output_path)
@@ -481,3 +491,56 @@ class BasePlotter:
         if output_path:
             g.savefig(output_path, dpi=self.settings['dpi'], bbox_inches='tight')
             plt.close()
+
+    def create_raincloud_distribution(self,
+                                      data: pd.DataFrame,
+                                      x: str,
+                                      y: str,
+                                      title: Union[str, dict[str, str]],
+                                      xlabel: str,
+                                      output_path: Optional[str] = None) -> None:
+        """Create an enhanced distribution plot combining violin, boxplot, and points"""
+
+        # Setup the figure
+        fig, ax = self.setup_figure(title if isinstance(title, str) else title['title'])
+
+        # Create violin plot
+        sns.violinplot(data=data, x=x, y=y, ax=ax, inner=None, color='lightgrey', alpha=0.5)
+
+        # Add individual points with jitter
+        sns.stripplot(data=data, x=x, y=y, ax=ax, size=3, alpha=0.3, jitter=0.2, color='darkblue')
+
+        # Add boxplot
+        sns.boxplot(data=data, x=x, y=y, ax=ax, width=0.1, color='white',
+                    showfliers=False, showbox=False, showcaps=False)
+
+        # Customize the plot
+        ax.set_xlabel(xlabel)
+        ax.set_ylabel('Frequency')
+
+        # Add subtle grid
+        ax.grid(True, axis='y', alpha=0.2)
+
+        # Add zero line for reference
+        ax.axhline(y=0, color='red', linestyle='--', alpha=0.3)
+
+        # Add sentiment regions
+        ax.axhspan(0, 1, alpha=0.1, color='green', label='Positive')
+        ax.axhspan(-1, 0, alpha=0.1, color='red', label='Negative')
+
+        # Add legend
+        ax.legend(loc='upper right')
+
+        # Add subtitle with sentiment indicator if provided
+        if isinstance(title, dict) and 'subtitle' in title:
+            ax.text(0.5, 1.05, title['subtitle'],
+                    horizontalalignment='center',
+                    transform=ax.transAxes,
+                    fontsize=10,
+                    fontweight='bold')
+
+        # Remove x-axis label since we're only showing one category
+        ax.set_xticks([])
+
+        if output_path:
+            self.save_plot(output_path)

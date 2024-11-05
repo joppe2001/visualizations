@@ -112,7 +112,7 @@ def create_text_clusters(df: pd.DataFrame, image_dir) -> None:
         # Initialize analyzer with chat-optimized settings
         analyzer = DimensionalityAnalyzer(
             clustering_config=ClusteringConfig(
-                n_clusters=10,  # Create 6 main topics
+                n_clusters=7,  # Create 5 main topics
                 random_state=42
             ),
             vectorizer_config=VectorizerConfig(
@@ -200,7 +200,7 @@ def visualize(all):
         click.echo(f"{num}. {name}")
 
     choice = click.prompt(
-        "Please select a visualization (1-5)",  # Updated range
+        "Please select a visualization (1-6)",  # Updated range
         type=click.IntRange(1, len(visualizations))
     )
 
@@ -209,7 +209,7 @@ def visualize(all):
         visualizations[choice][1](df, image_dir)
         click.echo("Visualization completed!")
     else:
-        click.echo("Invalid choice. Please select a number between 1 and 5.")
+        click.echo("Invalid choice. Please select a number between 1 and 6.")
 
 
 @cli.command()

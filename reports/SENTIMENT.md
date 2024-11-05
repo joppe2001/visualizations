@@ -1,60 +1,79 @@
-## Distribution of Message Sentiment
+# Is it a positive or negative conversation?
 
-### Visualization Design and Analysis
+## Data Processing and Filtering
 
-This visualization explores the distribution of sentiment scores across all messages in the chat using a histogram combined with a kernel density estimation (KDE) plot. The implementation emphasizes clarity in showing both the overall distribution shape and specific frequency patterns.
+Before diving into the sentiment analysis, it's important to note the preprocessing steps taken to ensure meaningful results:
+
+- The initial dataset contained approximately 35,000 messages
+- Messages were filtered out based on several criteria:
+  - System messages and media attachments (e.g., "image omitted", "missed call")
+  - Very short messages (less than 2 words)
+  - Messages without clear sentiment (neutral polarity)
+  - Empty messages and URLs
+  - Single emoji messages
+
+## Model Implementation
+
+This analysis uses TextBlob's sentiment analysis, which:
+- Assigns a polarity score between -1 (most negative) and 1 (most positive)
+- Uses a dictionary-based approach where words have pre-assigned sentiment values
+- Shows characteristic clustering around certain values (like ±0.5) due to its rule-based nature
+- Only includes messages with non-zero sentiment to focus on clear emotional signals
+
+### Understanding the Distribution Pattern
+
+A notable aspect of our results is the distinct clustering of sentiment scores around specific values. This is a characteristic "fingerprint" of dictionary-based sentiment models like TextBlob, where:
+
+- Sentiment scores are pre-defined based on human annotations
+- The clustering around values like 0.5 and -0.5 reflects these human-assigned scores
+- This pattern is expected and common in rule-based sentiment analysis
+- While it creates visible "peaks" in the distribution, it doesn't diminish the analysis's value
+
+## Visualization Design
+
+The visualization shows sentiment distribution using:
+- A clear -1 to 1 scale where:
+  - Positive numbers indicate positive sentiment
+  - Negative numbers indicate negative sentiment
+- Distinct annotation of the overall sentiment tendency
+- Additional statistics showing the percentage of positive vs negative messages
 
 ![Sentiment Distribution](../images/sentiment/sentiment_distribution.png)
 
-The visualization incorporates several key design principles:
-- **Dual Representation**: Combines histogram bars for precise frequency counts with a smoothed KDE line for trend visualization
-- **Clear Scale**: Full sentiment range from -1 to 1 shown with consistent binning
-- **Grid Implementation**: Light grid lines aid in value reading without overwhelming the data
-- **Color Choice**: Muted blue tones provide good contrast while remaining easy on the eyes
-- **Data-Ink Ratio**: Minimal non-data elements while maintaining readability
+## Key Findings
 
-### Key Findings
+The sentiment analysis reveals:
 
-The sentiment analysis reveals several interesting patterns:
+### Message Processing Results
+- Successfully analyzed sentiment for messages with clear emotional content
+- Filtered out system messages and ambiguous content
+- Focused on messages where TextBlob could detect definitive sentiment
 
-1. **Central Tendency**
-  - Strong central peak around 0, indicating a large number of neutral messages
-  - Approximately 35,000 messages in the neutral range
-  - Symmetrical fall-off on both sides of the neutral peak
+### Sentiment Patterns
+- Overall sentiment tendency is clearly visible
+- Distribution shows characteristic peaks typical of TextBlob analysis
+- Higher proportion of positive sentiments compared to negative
+- Clear separation between positive and negative sentiment clusters
 
-2. **Positive Sentiment Patterns**
-  - Multiple smaller peaks in the positive range (0.25-0.75)
-  - More consistent distribution in positive sentiments
-  - Three distinct positive sentiment clusters around 0.25, 0.5, and 0.75
+## Data Quality Considerations
 
-3. **Negative Sentiment Patterns**
-  - Fewer negative sentiment messages overall
-  - More gradual distribution on the negative side
-  - Less clustering in negative sentiments compared to positive
+Several factors influence our analysis:
 
-### Technical Implementation
+1. **TextBlob Characteristics**
+   - Dictionary-based approach creates distinct sentiment clusters
+   - Pre-defined sentiment values lead to visible peaks in the distribution
+   - More reliable for standard language than informal chat
 
-The visualization employs several sophisticated techniques:
-- VADER sentiment analysis for robust scoring
-- Combined histogram and KDE visualization
-- Optimal bin width selection for histogram
-- Kernel density estimation with bandwidth optimization
-- Careful handling of edge cases and extremes
+2. **Message Content Challenges**
+   - Informal language and slang may not be correctly interpreted
+   - Short messages might be filtered out
+   - Context-dependent meanings might be missed
+   - Mixed sentiment messages can be challenging to classify
 
-The code implementation features:
-- Dataclass-based configuration for maintainability
-- Clear separation of concerns between analysis and visualization
-- Comprehensive documentation
-- Efficient data processing
-- Type hints for better code quality
+3. **Filtering Effects**
+   - Zero-sentiment messages are excluded
+   - System messages and media notifications removed
+   - Very short messages filtered out
+   - Focus on clear, analyzable content
 
-### Implications and Context
-
-The sentiment distribution provides valuable insights into the emotional nature of the communication:
-1. Predominantly neutral tone in day-to-day communication
-2. More tendency toward positive rather than negative expressions
-3. Clear patterns in how positive sentiments are expressed
-4. Rare occurrence of extremely negative sentiments
-5. Natural clustering around common emotional expressions
-
-The visualization effectively demonstrates how sentiment is distributed across the messages while maintaining clean design principles and statistical validity.
+Despite these considerations, the analysis provides valuable insights into the emotional content of the conversations while being transparent about the model's characteristics and limitations.

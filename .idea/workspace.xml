@@ -4,11 +4,30 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="05669844-06a4-4701-8737-8901d52d5e23" name="Changes" comment="Add sentiment-time analysis and visualization features&#10;&#10;Introduced a new module `relationships.py` for sentiment analysis over time. Created detailed sentiment reports with visual findings. Updated dependencies and included Streamlit for interactive visualizations. Enhanced `dimensionality.py` for better keyword extraction and added functionality to convert Markdown reports to images.">
+    <list default="true" id="05669844-06a4-4701-8737-8901d52d5e23" name="Changes" comment="Add reports and analysis images&#10;&#10;Introduce new reports and various analytical images to illustrate WhatsApp communication patterns, highlighting temporal dynamics, emoji usage, sentiment analysis, and topic clustering. This addition aims to enhance the understanding of digital interaction, particularly in the context of neurodiversity and mental health.">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/reports/REPORT.md" beforeDir="false" afterPath="$PROJECT_DIR$/reports/REPORT.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/reports/create_png.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/dimvis.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/images/sentiment/monthly_sentiment.png" beforeDir="false" afterPath="$PROJECT_DIR$/images/sentiment/monthly_sentiment.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/images/sentiment/sentiment_distribution.png" beforeDir="false" afterPath="$PROJECT_DIR$/images/sentiment/sentiment_distribution.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/images/sentiment/sentiment_heatmap.png" beforeDir="false" afterPath="$PROJECT_DIR$/images/sentiment/sentiment_heatmap.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/images/sentiment_time/author_time_heatmap.png" beforeDir="false" afterPath="$PROJECT_DIR$/images/sentiment_time/author_time_heatmap.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/images/sentiment_time/hourly_sentiment.png" beforeDir="false" afterPath="$PROJECT_DIR$/images/sentiment_time/hourly_sentiment.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/images/sentiment_time/period_sentiment.png" beforeDir="false" afterPath="$PROJECT_DIR$/images/sentiment_time/period_sentiment.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/images/sentiment_time/weekend_sentiment.png" beforeDir="false" afterPath="$PROJECT_DIR$/images/sentiment_time/weekend_sentiment.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pyproject.toml" beforeDir="false" afterPath="$PROJECT_DIR$/pyproject.toml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/reports/CONCLUSION.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/reports/DIMVIS.md" beforeDir="false" afterPath="$PROJECT_DIR$/reports/DIMVIS.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/reports/DIMVIS.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/reports/EMOJI.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/reports/RELATIONS.md" beforeDir="false" afterPath="$PROJECT_DIR$/reports/RELATIONS.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/reports/RELATIONS.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/reports/SENTIMENT.md" beforeDir="false" afterPath="$PROJECT_DIR$/reports/SENTIMENT.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/reports/SENTIMENT.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/reports/TEMPORAL.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/base_plotter.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/base_plotter.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/dimensionality.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/dimensionality.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/distribution.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/distribution.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/main.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/relationships.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/relationships.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -48,6 +67,7 @@
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
     "ASKED_MARK_IGNORED_FILES_AS_EXCLUDED": "true",
+    "Python.8ball_quinten.executor": "Run",
     "Python.create_png.executor": "Run",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "git-widget-placeholder": "master",
@@ -56,7 +76,7 @@
     "node.js.selected.package.eslint": "(autodetect)",
     "node.js.selected.package.tslint": "(autodetect)",
     "nodejs_package_manager_path": "npm",
-    "settings.editor.selected.configurable": "com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable",
+    "settings.editor.selected.configurable": "preferences.pluginManager",
     "vue.rearranger.settings.migration": "true"
   }
 }]]></component>
@@ -95,6 +115,12 @@
       <workItem from="1730277662723" duration="203000" />
       <workItem from="1730281821962" duration="6297000" />
       <workItem from="1730641690531" duration="21039000" />
+      <workItem from="1730664745036" duration="364000" />
+      <workItem from="1730709153869" duration="2326000" />
+      <workItem from="1730713438855" duration="92000" />
+      <workItem from="1730732138384" duration="3459000" />
+      <workItem from="1730745582494" duration="6132000" />
+      <workItem from="1730801539281" duration="17615000" />
     </task>
     <task id="LOCAL-00001" summary="Update .idea/workspace.xml and clean up src/timestamp.py&#10;&#10;Remove unnecessary changes from .idea/workspace.xml and comment from visualize_hourly_activity in src/timestamp.py. This improves clarity and maintainability.">
       <option name="closed" value="true" />
@@ -136,7 +162,23 @@
       <option name="project" value="LOCAL" />
       <updated>1730662211718</updated>
     </task>
-    <option name="localTasksCounter" value="6" />
+    <task id="LOCAL-00006" summary="Delete obsolete scripts and update documentation&#10;&#10;Removed `create_png.py` and `dimvis.py` due to redundancy and lack of use. Added a GitHub URL to `REPORT.md` for easier access to the repository. This clean-up helps in maintaining code clarity and reduces repository clutter.">
+      <option name="closed" value="true" />
+      <created>1730664812329</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1730664812329</updated>
+    </task>
+    <task id="LOCAL-00007" summary="Add reports and analysis images&#10;&#10;Introduce new reports and various analytical images to illustrate WhatsApp communication patterns, highlighting temporal dynamics, emoji usage, sentiment analysis, and topic clustering. This addition aims to enhance the understanding of digital interaction, particularly in the context of neurodiversity and mental health.">
+      <option name="closed" value="true" />
+      <created>1730664822926</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1730664822926</updated>
+    </task>
+    <option name="localTasksCounter" value="8" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -148,9 +190,12 @@
     <MESSAGE value="Refactor and enhance timestamp visualization&#10;&#10;Updated `visualize_hourly_activity` to include modern styling, a smooth non-negative trend line, and improved data visualization and annotation. Cleaned up unused imports and improved the chart configuration for better readability and maintainability. Changed styling class and method signatures for better clarity." />
     <MESSAGE value="Delete unused images, add new report documents, and enhance emoji analysis&#10;&#10;Removed obsolete images related to clustering. Added comprehensive EMOJI.md and TEMPORAL.md reports. Enhanced emoji analysis in emoji_use.py with modern styling, additional pattern analysis, and detailed annotations. Also added dependency 'spacy' in pyproject.toml and improved text processing and clustering functionality in dimensionality.py." />
     <MESSAGE value="Add sentiment-time analysis and visualization features&#10;&#10;Introduced a new module `relationships.py` for sentiment analysis over time. Created detailed sentiment reports with visual findings. Updated dependencies and included Streamlit for interactive visualizations. Enhanced `dimensionality.py` for better keyword extraction and added functionality to convert Markdown reports to images." />
-    <option name="LAST_COMMIT_MESSAGE" value="Add sentiment-time analysis and visualization features&#10;&#10;Introduced a new module `relationships.py` for sentiment analysis over time. Created detailed sentiment reports with visual findings. Updated dependencies and included Streamlit for interactive visualizations. Enhanced `dimensionality.py` for better keyword extraction and added functionality to convert Markdown reports to images." />
+    <MESSAGE value="Delete obsolete scripts and update documentation&#10;&#10;Removed `create_png.py` and `dimvis.py` due to redundancy and lack of use. Added a GitHub URL to `REPORT.md` for easier access to the repository. This clean-up helps in maintaining code clarity and reduces repository clutter." />
+    <MESSAGE value="Add reports and analysis images&#10;&#10;Introduce new reports and various analytical images to illustrate WhatsApp communication patterns, highlighting temporal dynamics, emoji usage, sentiment analysis, and topic clustering. This addition aims to enhance the understanding of digital interaction, particularly in the context of neurodiversity and mental health." />
+    <option name="LAST_COMMIT_MESSAGE" value="Add reports and analysis images&#10;&#10;Introduce new reports and various analytical images to illustrate WhatsApp communication patterns, highlighting temporal dynamics, emoji usage, sentiment analysis, and topic clustering. This addition aims to enhance the understanding of digital interaction, particularly in the context of neurodiversity and mental health." />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/visualizations$create_png.coverage" NAME="create_png Coverage Results" MODIFIED="1730662359032" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/reports" />
+    <SUITE FILE_PATH="coverage/visualizations$8ball_quinten.coverage" NAME="8ball_quinten Coverage Results" MODIFIED="1730709945586" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
   </component>
 </project>

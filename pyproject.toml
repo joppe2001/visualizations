@@ -28,7 +28,8 @@ dependencies = [
     "pyarrow",
     "fastparquet",
     "spacy",
-    "streamlit"
+    "streamlit",
+    "transformers>=4.46.1",
 ]
 
 [project.scripts]

@@ -1,11 +1,13 @@
 from dataclasses import dataclass, field
-from typing import List, Dict, Optional, Tuple
+from typing import List, Dict, Tuple
 import numpy as np
 import pandas as pd
 from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
 from sklearn.decomposition import PCA
 from sklearn.manifold import TSNE
 from sklearn.cluster import KMeans
+from matplotlib.patches import Ellipse
+import matplotlib.transforms as transforms
 import matplotlib.pyplot as plt
 from pathlib import Path
 from joblib import Memory
@@ -15,9 +17,18 @@ from base_plotter import BasePlotter
 
 
 @dataclass
+class ClusterTheme:
+    theme_name: str
+    confidence: str  # 'high', 'medium', 'low', or 'unclear'
+    description: str
+    representative_messages: List[str] = field(default_factory=list)
+
+
+@dataclass
 class ClusteringConfig:
-    n_clusters: int = 8  # Number of main topics to identify
+    n_clusters: int = 8
     random_state: int = 42
+    sample_size: int = 50  # Number of messages to sample for theme analysis
 
 
 @dataclass
@@ -49,7 +60,7 @@ class AnalysisResults:
     embedded_data: np.ndarray
     clusters: np.ndarray
     cluster_keywords: Dict[int, List[str]]
-    cluster_labels: Dict[int, str]
+    cluster_themes: Dict[int, ClusterTheme]
     cluster_sizes: Dict[int, int]
 
 
@@ -112,60 +123,174 @@ class DimensionalityAnalyzer:
 
         return cluster_keywords
 
+    def _identify_cluster_theme(self,
+                              cluster_texts: List[str],
+                              keywords: List[str],
+                              sample_size: int = 50) -> ClusterTheme:
+        """Analyze cluster keywords and messages to identify themes with improved keyword prioritization."""
+        # Sample messages for analysis
+        sample = np.random.choice(cluster_texts,
+                                size=min(sample_size, len(cluster_texts)),
+                                replace=False)
+
+        top_3_keywords = set(keywords[:3])
+        keywords_str = ', '.join(top_3_keywords)
+
+        # Theme identification with categories based on actual conversation patterns
+        affectionate_words = {
+            'love', 'cutie', 'lovvie', 'baby', 'bby', 'handsome', 'cute',
+            'miss', 'beautiful', 'perfect', 'amazing'
+        }
+
+        daily_life_words = {
+            'home', 'work', 'office', 'train', 'metro', 'walking', 'safely',
+            'tickets', 'jacket', 'bed', 'sleep'
+        }
+
+        planning_words = {
+            'tonight', 'dinner', 'ramen', 'birthday', 'bbq', 'free', 'next week',
+            'monday', 'visit'
+        }
+
+        missing_together_words = {
+            'miss', 'come back', 'wish', 'together', 'cant wait', 'come to me',
+            'back home', 'want you'
+        }
+
+        # Check message themes
+        if any(word in affectionate_words for word in top_3_keywords):
+            return ClusterTheme(
+                theme_name="Love & Affection",
+                confidence="high",
+                description=f"Expressions of love and affection. Key terms: {keywords_str}",
+                representative_messages=sample[:3]
+            )
+
+        if any(word in daily_life_words for word in top_3_keywords):
+            return ClusterTheme(
+                theme_name="Daily Life Together",
+                confidence="high",
+                description=f"Sharing daily activities and updates. Key terms: {keywords_str}",
+                representative_messages=sample[:3]
+            )
+
+        if any(word in planning_words for word in top_3_keywords):
+            return ClusterTheme(
+                theme_name="Making Plans",
+                confidence="high",
+                description=f"Planning activities and events. Key terms: {keywords_str}",
+                representative_messages=sample[:3]
+            )
+
+        if any(word in missing_together_words for word in top_3_keywords):
+            return ClusterTheme(
+                theme_name="Missing Each Other",
+                confidence="high",
+                description=f"Expressions of missing each other. Key terms: {keywords_str}",
+                representative_messages=sample[:3]
+            )
+
+        # For messages in other languages (Portuguese/German)
+        if any(word in {'eu', 'você', 'te', 'wir', 'du', 'ist'} for word in top_3_keywords):
+            return ClusterTheme(
+                theme_name="Language Practice",
+                confidence="medium",
+                description=f"Conversations in other languages. Key terms: {keywords_str}",
+                representative_messages=sample[:3]
+            )
+
+        # Analyze message patterns for remaining cases
+        msg_lengths = [len(msg.split()) for msg in sample]
+        avg_length = sum(msg_lengths) / len(msg_lengths)
+
+        if avg_length > 15:
+            return ClusterTheme(
+                theme_name="💬 Extended Messages",
+                confidence="medium",
+                description=f"Longer conversations about: {keywords_str}",
+                representative_messages=sample[:3]
+            )
+        else:
+            # Filter out very common words for theme naming
+            common_words = {'just', 'like', 'want', 'gonna', 'im', 'dont', 'know',
+                            'get', 'got', 'yeah', 'yes', 'okay', 'sure', 'well'}
+            theme_words = [word for word in top_3_keywords if len(word) > 3
+                           and word not in common_words]
+
+            if theme_words:
+                theme_name = f"Chat about {' & '.join(theme_words)}"
+            else:
+                theme_name =  "Quick Updates"
+
+            return ClusterTheme(
+                theme_name=theme_name,
+                confidence="medium",
+                description=f"Short message exchanges about: {keywords_str}",
+                representative_messages=sample[:3]
+            )
+
+    def _get_text_vectors(self, texts: List[str]) -> np.ndarray:
+        """Convert texts to TF-IDF vectors."""
+        self.vectorizer = TfidfVectorizer(
+            min_df=self.vectorizer_config.min_df,
+            max_features=self.vectorizer_config.max_features,
+            stop_words=self.vectorizer_config.stop_words,
+            ngram_range=self.vectorizer_config.ngram_range
+        )
+        return self.vectorizer.fit_transform(texts).toarray()
+
     def analyze_and_visualize(self, df: pd.DataFrame, output_dir: Path) -> AnalysisResults:
-        """Main analysis and visualization function."""
-        try:
-            print("\n=== Starting Topic Analysis ===")
-            output_dir.mkdir(exist_ok=True)
+        """Main analysis and visualization function with theme identification."""
+        print("\n=== Starting Theme Analysis ===")
+        output_dir.mkdir(exist_ok=True)
 
-            texts = self._preprocess_texts(df['message'].tolist())
-            print(f"Analyzing {len(texts)} messages...")
+        texts = self._preprocess_texts(df['message'].tolist())
+        print(f"Analyzing {len(texts)} messages...")
 
-            print("Vectorizing texts...")
-            vectors = self._get_text_vectors(texts)
-            print(f"Vector shape: {vectors.shape}")
+        vectors = self._get_text_vectors(texts)
 
-            print("Identifying main topics...")
-            kmeans = KMeans(
-                n_clusters=self.clustering_config.n_clusters,
-                random_state=self.clustering_config.random_state,
-                n_init=10
+        kmeans = KMeans(
+            n_clusters=self.clustering_config.n_clusters,
+            random_state=self.clustering_config.random_state,
+            n_init=10
+        )
+        clusters = kmeans.fit_predict(vectors)
+
+        cluster_keywords = self._extract_cluster_keywords(texts, clusters)
+
+        # Identify themes for each cluster
+        cluster_themes = {}
+        print("\nIdentifying conversation themes...")
+        for cluster_id in tqdm(range(self.clustering_config.n_clusters)):
+            cluster_texts = [text for text, c in zip(texts, clusters) if c == cluster_id]
+            keywords = cluster_keywords[cluster_id]
+            theme = self._identify_cluster_theme(
+                cluster_texts,
+                keywords,
+                self.clustering_config.sample_size
             )
-            clusters = kmeans.fit_predict(vectors)
+            cluster_themes[cluster_id] = theme
 
-            cluster_keywords = self._extract_cluster_keywords(texts, clusters)
+        cluster_sizes = {
+            cluster_id: np.sum(clusters == cluster_id)
+            for cluster_id in range(self.clustering_config.n_clusters)
+        }
 
-            cluster_sizes = {
-                cluster_id: np.sum(clusters == cluster_id)
-                for cluster_id in range(self.clustering_config.n_clusters)
-            }
+        results = AnalysisResults(
+            embedded_data=vectors,
+            clusters=clusters,
+            cluster_keywords=cluster_keywords,
+            cluster_themes=cluster_themes,
+            cluster_sizes=cluster_sizes
+        )
 
-            cluster_labels = {
-                cluster_id: f"Topic {cluster_id + 1}: {' & '.join(keywords[:2])}"
-                for cluster_id, keywords in cluster_keywords.items()
-            }
+        print("\nGenerating visualizations...")
+        self._create_visualizations(results, texts, output_dir)
 
-            results = AnalysisResults(
-                embedded_data=vectors,
-                clusters=clusters,
-                cluster_keywords=cluster_keywords,
-                cluster_labels=cluster_labels,
-                cluster_sizes=cluster_sizes
-            )
+        print("\n=== Analysis Complete ===")
+        self._print_theme_summary(results)
 
-            print("\nGenerating visualizations...")
-            self._create_visualizations(results, texts, output_dir)
-
-            print("\n=== Analysis Complete ===")
-            self._print_topic_summary(results)
-
-            return results
-
-        except Exception as e:
-            print(f"\n❌ Error in analysis: {str(e)}")
-            import traceback
-            traceback.print_exc()
-            raise
+        return results
 
     def _create_visualizations(self, results: AnalysisResults, texts: List[str], output_dir: Path) -> None:
         """Create all visualizations using BasePlotter."""
@@ -181,76 +306,147 @@ class DimensionalityAnalyzer:
 
     def _create_single_visualization(self, results: AnalysisResults, method: str,
                                      plotter: BasePlotter, output_dir: Path) -> None:
-        """Create a single visualization using BasePlotter."""
+        """Create a single visualization with cluster overlaps highlighted."""
         print(f"Generating {method} visualization...")
 
-        # Perform dimensionality reduction
         if method == "t-SNE":
             embedded = TSNE(n_components=2, random_state=42).fit_transform(results.embedded_data)
-            title = 'Message Topics (t-SNE)'
-        else:  # PCA
+            title = 'Conversation Themes (t-SNE)'
+        else:
             pca = PCA(n_components=2, random_state=42)
             embedded = pca.fit_transform(results.embedded_data)
-            title = f'Message Topics (PCA)\nTotal Variance Explained: {sum(pca.explained_variance_ratio_):.1%}'
+            title = f'Conversation Themes (PCA)\nTotal Variance Explained: {sum(pca.explained_variance_ratio_):.1%}'
 
         fig, ax = plotter.setup_figure(title)
 
+        # Create a consistent color mapping
+        cmap = plt.get_cmap(self.viz_config.cmap)
+        colors = [cmap(i / self.clustering_config.n_clusters)
+                  for i in range(self.clustering_config.n_clusters)]
+
+        # Create a color map dictionary that maps cluster IDs to their colors
+        sorted_topics = sorted(results.cluster_sizes.items(), key=lambda x: x[1], reverse=True)
+        color_map = {cluster_id: colors[cluster_id] for cluster_id, _ in sorted_topics}
+
+        # Calculate cluster centroids and covariances
+        cluster_info = {}
+        for cluster_id in range(self.clustering_config.n_clusters):
+            mask = results.clusters == cluster_id
+            if np.sum(mask) > 0:
+                points = embedded[mask]
+                centroid = np.mean(points, axis=0)
+
+                if len(points) > 1:
+                    covariance = np.cov(points.T)
+                    eigenvals, eigenvects = np.linalg.eigh(covariance)
+                    cluster_info[cluster_id] = {
+                        'centroid': centroid,
+                        'eigenvals': eigenvals,
+                        'eigenvects': eigenvects,
+                        'points': points
+                    }
+
+        # Create color array for scatter plot that matches the cluster colors
+        point_colors = [color_map[cluster_id] for cluster_id in results.clusters]
+
+        # Draw the scatter plot using the mapped colors
         scatter = ax.scatter(
             embedded[:, 0], embedded[:, 1],
-            c=results.clusters,
-            cmap=self.viz_config.cmap,
+            c=point_colors,
             alpha=self.viz_config.alpha,
             s=50
         )
 
-        ax.set_xlabel(f'{method} Dimension 1')
-        ax.set_ylabel(f'{method} Dimension 2')
+        def confidence_ellipse(points, ax, n_std=2.0, **kwargs):
+            """Create a covariance confidence ellipse of the points."""
+            if len(points) < 2:
+                return None
 
-        # Create legend
-        sorted_topics = sorted(results.cluster_sizes.items(), key=lambda x: x[1], reverse=True)
+            cov = np.cov(points, rowvar=False)
+            pearson = cov[0, 1] / np.sqrt(cov[0, 0] * cov[1, 1])
+
+            ell_radius_x = np.sqrt(1 + pearson)
+            ell_radius_y = np.sqrt(1 - pearson)
+
+            ellipse = Ellipse((0, 0), width=ell_radius_x * 2, height=ell_radius_y * 2,
+                              **kwargs)
+
+            scale_x = np.sqrt(cov[0, 0]) * n_std
+            scale_y = np.sqrt(cov[1, 1]) * n_std
+
+            transf = transforms.Affine2D() \
+                .rotate_deg(45) \
+                .scale(scale_x, scale_y) \
+                .translate(np.mean(points[:, 0]), np.mean(points[:, 1]))
+
+            ellipse.set_transform(transf + ax.transData)
+            return ellipse
+
+        # Draw ellipses using the same color mapping
+        for cluster_id, info in cluster_info.items():
+            color = color_map[cluster_id]
+            ellipse = confidence_ellipse(
+                info['points'],
+                ax,
+                n_std=2.0,
+                facecolor=color,
+                alpha=0.1,
+                edgecolor=color,
+                linewidth=1,
+                linestyle='--'
+            )
+            if ellipse is not None:
+                ax.add_patch(ellipse)
+
+        # Create legend with consistent colors
         legend_elements = []
         legend_labels = []
-
-        cmap = plt.get_cmap(self.viz_config.cmap)
-        n_clusters = self.clustering_config.n_clusters
-        colors = [cmap(i / n_clusters) for i in range(n_clusters)]
         total_messages = sum(results.cluster_sizes.values())
 
         for cluster_id, size in sorted_topics:
-            patch = plt.Circle(
-                (0, 0),
-                radius=1,
-                color=colors[cluster_id],
-                alpha=self.viz_config.alpha
-            )
+            theme = results.cluster_themes[cluster_id]
+            patch = plt.Circle((0, 0), radius=1, color=color_map[cluster_id],
+                               alpha=self.viz_config.alpha)
             legend_elements.append(patch)
 
             percentage = (size / total_messages) * 100
-            keywords = results.cluster_keywords[cluster_id][:3]
-            label = f"Topic {cluster_id + 1}: {', '.join(keywords)}\n({size:,} msgs, {percentage:.1f}%)"
+            confidence_marker = "high" if theme.confidence == "high" else "medium"
+
+            # More concise and clearer label format
+            label = (f"{theme.theme_name}\n"
+                     f"({percentage:.1f}% of messages)\n"
+                     f"Common words: {', '.join(results.cluster_keywords[cluster_id][:3])}")
             legend_labels.append(label)
 
+            # Add legend with better formatting
         ax.legend(
             legend_elements,
             legend_labels,
             loc='center left',
             bbox_to_anchor=(1.02, 0.5),
-            fontsize=8,
-            title="Topics by Size",
-            title_fontsize=10,
+            fontsize=9,  # Slightly larger font
+            title="Conversation Topics",
+            title_fontsize=11,
             borderaxespad=0,
             frameon=True,
             fancybox=True,
             shadow=True
         )
 
-        output_path = output_dir / f'{method.lower()}_topics.png'
+        # Add tight_layout with larger bottom margin
+        plt.tight_layout(rect=(0, 0.1, 0.85, 1))  # Adjusted margins
+
+        # Simplified notes
+        plt.figtext(0.98, 0.02, "Dashed lines show where topics overlap",
+                    ha='right', fontsize=8, style='italic')
+
+        output_path = output_dir / f'{method.lower()}_themes.png'
         plotter.save_plot(str(output_path))
 
-    def _print_topic_summary(self, results: AnalysisResults) -> None:
-        """Print a summary of the topics found."""
-        print("\nTopic Summary:")
-        print("=" * 50)
+    def _print_theme_summary(self, results: AnalysisResults) -> None:
+        """Print a detailed summary of the identified themes."""
+        print("\nConversation Theme Summary:")
+        print("=" * 60)
 
         sorted_topics = sorted(
             results.cluster_sizes.items(),
@@ -261,19 +457,13 @@ class DimensionalityAnalyzer:
         total_messages = sum(results.cluster_sizes.values())
 
         for cluster_id, size in sorted_topics:
+            theme = results.cluster_themes[cluster_id]
             percentage = (size / total_messages) * 100
-            keywords = results.cluster_keywords[cluster_id]
+            confidence_marker = "high" if theme.confidence == "high" else "medium"
 
-            print(f"\n{results.cluster_labels[cluster_id]}")
+            print(f"\nTheme: {theme.theme_name} {confidence_marker}")
             print(f"Size: {size:,} messages ({percentage:.1f}%)")
-            print(f"Keywords: {', '.join(keywords)}")
-
-    def _get_text_vectors(self, texts: List[str]) -> np.ndarray:
-        """Convert texts to TF-IDF vectors."""
-        self.vectorizer = TfidfVectorizer(
-            min_df=self.vectorizer_config.min_df,
-            max_features=self.vectorizer_config.max_features,
-            stop_words=self.vectorizer_config.stop_words,
-            ngram_range=self.vectorizer_config.ngram_range
-        )
-        return self.vectorizer.fit_transform(texts).toarray()
+            print(f"Description: {theme.description}")
+            print("Sample messages:")
+            for msg in theme.representative_messages[:2]:
+                print(f"  - {msg[:100]}...")

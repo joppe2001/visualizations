@@ -13,6 +13,7 @@ class ColumnConfig:
     message: str = 'message'
     author: str = 'author'
     sentiment: str = 'sentiment'
+    has_sentiment: str = 'has_sentiment'  # New column to flag messages with valid sentiment
 
 
 @dataclass
@@ -28,6 +29,7 @@ class TimeFeatures:
 class TimeConfig:
     """Configuration for time periods"""
     time_periods: Dict[str, Tuple[int, int]] = None
+    sentiment_threshold: float = 0.05  # Minimum absolute sentiment score to consider
 
     def __post_init__(self):
         self.time_periods = self.time_periods or {
@@ -55,9 +57,19 @@ class SentimentTimeAnalyzer:
         self.plotter = plotter or BasePlotter(preset='minimal')
         self.sentiment_analyzer = SentimentIntensityAnalyzer()
 
-    def _calculate_sentiment(self, text: str) -> float:
-        """Calculate sentiment score for a message"""
-        return self.sentiment_analyzer.polarity_scores(str(text))['compound']
+    def _calculate_sentiment(self, text: str) -> Tuple[Optional[float], bool]:
+        """
+        Calculate sentiment score for a message and determine if it has meaningful sentiment.
+        Returns (sentiment_score, has_sentiment).
+        """
+        try:
+            compound_score = self.sentiment_analyzer.polarity_scores(str(text))['compound']
+            # Only consider messages with sentiment above threshold
+            if abs(compound_score) >= self.time_config.sentiment_threshold:
+                return compound_score, True
+            return None, False
+        except:
+            return None, False
 
     def _get_time_period(self, hour: int) -> str:
         """Map hour to time period"""
@@ -91,7 +103,9 @@ class SentimentTimeAnalyzer:
         )
 
         # Calculate sentiment
-        df[self.cols.sentiment] = df[self.cols.message].apply(self._calculate_sentiment)
+        sentiment_results = df[self.cols.message].apply(self._calculate_sentiment)
+        df[self.cols.sentiment] = sentiment_results.apply(lambda x: x[0])
+        df[self.cols.has_sentiment] = sentiment_results.apply(lambda x: x[1])
 
         return df
 
@@ -103,7 +117,15 @@ class SentimentTimeAnalyzer:
         # Prepare the data
         df = self.prepare_data(df)
 
-        # Create visualizations using BasePlotter
+        # Print basic statistics
+        total_messages = len(df)
+        sentiment_messages = df[self.cols.has_sentiment].sum()
+        print(f"\nMessage Analysis:")
+        print(f"Total messages: {total_messages:,}")
+        print(f"Messages with sentiment: {sentiment_messages:,} ({sentiment_messages / total_messages * 100:.1f}%)")
+        print(f"Messages without sentiment: {total_messages - sentiment_messages:,} ({(total_messages - sentiment_messages) / total_messages * 100:.1f}%)")
+
+        # Create visualizations using only messages with sentiment
         self._create_hourly_trends(df, output_dir)
         self._create_period_distribution(df, output_dir)
         self._create_author_time_heatmap(df, output_dir)
@@ -117,11 +139,12 @@ class SentimentTimeAnalyzer:
 
     def _create_hourly_trends(self, df: pd.DataFrame, output_dir: Path) -> None:
         """Create hourly sentiment trend visualization"""
-        hourly_avg = df.groupby(self.time_features.hour)[self.cols.sentiment].mean()
+        sentiment_df = df[df[self.cols.has_sentiment]]
+        hourly_avg = sentiment_df.groupby(self.time_features.hour)[self.cols.sentiment].mean()
 
         self.plotter.create_line_plot(
             data=hourly_avg,
-            title="Sentiment Throughout the Day",
+            title="Sentiment Throughout the Day (Messages with Sentiment)",
             xlabel="Hour of Day",
             ylabel="Average Sentiment Score",
             output_path=output_dir / "hourly_sentiment.png"
@@ -129,18 +152,20 @@ class SentimentTimeAnalyzer:
 
     def _create_period_distribution(self, df: pd.DataFrame, output_dir: Path) -> None:
         """Create time period sentiment distribution"""
+        sentiment_df = df[df[self.cols.has_sentiment]]
         self.plotter.create_boxplot(
-            data=df,
+            data=sentiment_df,
             x=self.time_features.time_of_day,
             y=self.cols.sentiment,
-            title="Sentiment Distribution by Time of Day",
+            title="Sentiment Distribution by Time of Day (Messages with Sentiment)",
             ylabel="Sentiment Score",
             output_path=output_dir / "period_sentiment.png"
         )
 
     def _create_author_time_heatmap(self, df: pd.DataFrame, output_dir: Path) -> None:
         """Create heatmap of sentiment by author and time"""
-        pivot_data = df.pivot_table(
+        sentiment_df = df[df[self.cols.has_sentiment]]
+        pivot_data = sentiment_df.pivot_table(
             values=self.cols.sentiment,
             index=self.time_features.time_of_day,
             columns=self.cols.author,
@@ -149,31 +174,33 @@ class SentimentTimeAnalyzer:
 
         self.plotter.create_heatmap(
             data=pivot_data,
-            title="Sentiment Patterns: Authors × Time of Day",
+            title="Sentiment Patterns: Authors × Time of Day ( 1 = pos, 0 = neut )",
             output_path=output_dir / "author_time_heatmap.png"
         )
 
     def _create_weekend_comparison(self, df: pd.DataFrame, output_dir: Path) -> None:
         """Create weekend vs weekday comparison"""
+        sentiment_df = df[df[self.cols.has_sentiment]]
         weekend_labels = {False: 'Weekday', True: 'Weekend'}
-        df['day_type'] = df[self.time_features.is_weekend].map(weekend_labels)
+        sentiment_df['day_type'] = sentiment_df[self.time_features.is_weekend].map(weekend_labels)
 
         self.plotter.create_boxplot(
-            data=df,
+            data=sentiment_df,
             x='day_type',
             y=self.cols.sentiment,
-            title="Weekend vs Weekday Sentiment",
+            title="Weekend vs Weekday Sentiment (Messages with Sentiment)",
             ylabel="Sentiment Score",
             output_path=output_dir / "weekend_sentiment.png"
         )
 
     def _calculate_statistics(self, df: pd.DataFrame) -> Dict:
         """Calculate summary statistics"""
+        sentiment_df = df[df[self.cols.has_sentiment]]
         return {
-            'hourly': df.groupby(self.time_features.hour)[self.cols.sentiment].agg(['mean', 'std']),
-            'period': df.groupby(self.time_features.time_of_day)[self.cols.sentiment].agg(['mean', 'std']),
-            'weekend': df.groupby(self.time_features.is_weekend)[self.cols.sentiment].agg(['mean', 'std']),
-            'author_time': df.pivot_table(
+            'hourly': sentiment_df.groupby(self.time_features.hour)[self.cols.sentiment].agg(['mean', 'std']),
+            'period': sentiment_df.groupby(self.time_features.time_of_day)[self.cols.sentiment].agg(['mean', 'std']),
+            'weekend': sentiment_df.groupby(self.time_features.is_weekend)[self.cols.sentiment].agg(['mean', 'std']),
+            'author_time': sentiment_df.pivot_table(
                 values=self.cols.sentiment,
                 index=self.time_features.time_of_day,
                 columns=self.cols.author,
