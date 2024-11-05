@@ -12,7 +12,7 @@ The analysis combines dimensionality reduction (PCA and t-SNE) with K-means clus
 
 This visualization employs dimensionality reduction techniques (PCA and t-SNE) combined with K-means clustering to identify and visualize distinct conversation topics within the chat. The analysis follows several key visualization principles to effectively communicate complex multidimensional data.
 
-![Message Topics (PCA)](../images/text_clusters/pca_topics.png)
+![Message Topics (PCA)](../images/text_clusters/pca_themes.png)
 
 The visualization incorporates several key design principles:
 - **Dimensional Clarity**: Using PCA to reduce high-dimensional text data to two interpretable dimensions

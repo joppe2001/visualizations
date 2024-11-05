@@ -77,6 +77,13 @@ python src/main.py visualize
 python src/main.py visualize --all
 ```
 
+### 6. Start the dashboard
+
+```bash
+# run the dashboard after having done rye sync
+dashboard --streamlit
+```
+
 Visualizations will be saved in the `visualizations/` directory.
 
 ## Output

@@ -41,11 +41,17 @@ class VectorizerConfig:
 
 @dataclass
 class VisualizationConfig:
-    figure_size: Tuple[int, int] = (15, 10)
-    dpi: int = 300
+    figure_size: Tuple[int, int] = (18, 12)  # Increased from (15, 10)
+    dpi: int = 1600  # Increased from 300 for higher resolution
     cmap: str = 'tab10'
-    alpha: float = 0.6
+    alpha: float = 0.7
     style: str = 'seaborn-v0_8-darkgrid'
+
+    # Added font configurations
+    title_fontsize: int = 14
+    label_fontsize: int = 12
+    legend_fontsize: int = 14
+    legend_title_fontsize: int = 16
 
 
 @dataclass
@@ -309,6 +315,23 @@ class DimensionalityAnalyzer:
         """Create a single visualization with cluster overlaps highlighted."""
         print(f"Generating {method} visualization...")
 
+        # Setup figure with high-quality settings
+        plt.rcParams.update({
+            'figure.dpi': self.viz_config.dpi,
+            'savefig.dpi': self.viz_config.dpi,
+            'font.size': 14,
+            'axes.labelsize': 14,
+            'axes.titlesize': 16,
+            'xtick.labelsize': 12,
+            'ytick.labelsize': 12,
+            'lines.markersize': 10,
+            'lines.linewidth': 2.5,
+            'font.family': 'sans-serif',
+            'font.weight': 'medium',
+            'axes.labelweight': 'bold',
+            'figure.figsize': self.viz_config.figure_size
+        })
+
         if method == "t-SNE":
             embedded = TSNE(n_components=2, random_state=42).fit_transform(results.embedded_data)
             title = 'Conversation Themes (t-SNE)'
@@ -318,6 +341,15 @@ class DimensionalityAnalyzer:
             title = f'Conversation Themes (PCA)\nTotal Variance Explained: {sum(pca.explained_variance_ratio_):.1%}'
 
         fig, ax = plotter.setup_figure(title)
+
+        # Set higher quality figure properties
+        plt.rcParams['figure.dpi'] = self.viz_config.dpi
+        plt.rcParams['savefig.dpi'] = self.viz_config.dpi
+        plt.rcParams['font.size'] = 12
+        plt.rcParams['axes.labelsize'] = 12
+        plt.rcParams['axes.titlesize'] = 14
+        plt.rcParams['lines.markersize'] = 8
+        plt.rcParams['lines.linewidth'] = 2
 
         # Create a consistent color mapping
         cmap = plt.get_cmap(self.viz_config.cmap)
@@ -418,30 +450,41 @@ class DimensionalityAnalyzer:
                      f"Common words: {', '.join(results.cluster_keywords[cluster_id][:3])}")
             legend_labels.append(label)
 
-            # Add legend with better formatting
+        # Add legend with better formatting
         ax.legend(
             legend_elements,
             legend_labels,
             loc='center left',
             bbox_to_anchor=(1.02, 0.5),
-            fontsize=9,  # Slightly larger font
+            fontsize=12,
             title="Conversation Topics",
-            title_fontsize=11,
+            title_fontsize=14,
             borderaxespad=0,
             frameon=True,
             fancybox=True,
-            shadow=True
+            shadow=True,
+            markerscale=2.0
         )
 
-        # Add tight_layout with larger bottom margin
-        plt.tight_layout(rect=(0, 0.1, 0.85, 1))  # Adjusted margins
+        # Adjusted layout with more space for legend
+        plt.tight_layout(rect=(0, 0.1, 0.82, 1))
 
-        # Simplified notes
+        # Higher quality notes text
         plt.figtext(0.98, 0.02, "Dashed lines show where topics overlap",
-                    ha='right', fontsize=8, style='italic')
+                    ha='right', fontsize=8, style='italic', weight='medium')
 
+        # Save with maximum quality
         output_path = output_dir / f'{method.lower()}_themes.png'
-        plotter.save_plot(str(output_path))
+        plt.savefig(
+            str(output_path),
+            dpi=self.viz_config.dpi,
+            bbox_inches='tight',
+            pad_inches=0.2,
+            format='png',
+            transparent=False,
+            facecolor='white'
+        )
+        plt.close()
 
     def _print_theme_summary(self, results: AnalysisResults) -> None:
         """Print a detailed summary of the identified themes."""
