@@ -77,7 +77,7 @@ python src/main.py visualize
 python src/main.py visualize --all
 ```
 
-### 6. Start the dashboard
+### 6. Start the relations dashboard
 
 ```bash
 # run the dashboard after having done rye sync

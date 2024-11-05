@@ -4,17 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="05669844-06a4-4701-8737-8901d52d5e23" name="Changes" comment="**Filter data, update sentiment analysis, and update clustering**&#10;&#10;Enhance data filtering and update sentiment analysis to focus on meaningful signals. Introduce cluster themes for improved topic analysis and visualization, providing insights into message context and emotional patterns.">
-      <change afterPath="$PROJECT_DIR$/reports/joppe-report.pdf" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/dashboard/__init__.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/dashboard/relations_streamlit.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pyproject.toml" beforeDir="false" afterPath="$PROJECT_DIR$/pyproject.toml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/reports/DIMVIS.md" beforeDir="false" afterPath="$PROJECT_DIR$/reports/DIMVIS.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/dimensionality.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/dimensionality.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/relations_streamlit.py" beforeDir="false" />
-    </list>
+    <list default="true" id="05669844-06a4-4701-8737-8901d52d5e23" name="Changes" comment="Add comprehensive WhatsApp communication analysis report&#10;&#10;Introduced detailed analysis of WhatsApp chat patterns including emoji usage, sentiment analysis, and topic clustering. Added associated visualizations and a new logfile for tracking preprocessing. This provides valuable insights into digital communication dynamics, particularly in the context of neurodiversity and mental health." />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -112,7 +102,7 @@
       <workItem from="1730713438855" duration="92000" />
       <workItem from="1730732138384" duration="3459000" />
       <workItem from="1730745582494" duration="6132000" />
-      <workItem from="1730801539281" duration="26785000" />
+      <workItem from="1730801539281" duration="27133000" />
     </task>
     <task id="LOCAL-00001" summary="Update .idea/workspace.xml and clean up src/timestamp.py&#10;&#10;Remove unnecessary changes from .idea/workspace.xml and comment from visualize_hourly_activity in src/timestamp.py. This improves clarity and maintainability.">
       <option name="closed" value="true" />
@@ -178,7 +168,23 @@
       <option name="project" value="LOCAL" />
       <updated>1730826990169</updated>
     </task>
-    <option name="localTasksCounter" value="9" />
+    <task id="LOCAL-00009" summary="Add new dashboard and remove old Streamlit app&#10;&#10;This commit introduces a new, advanced dashboard for WhatsApp analysis while removing the old Streamlit application. The new dashboard includes enhanced visualization settings, improved data processing, and added statistics for a more comprehensive user experience. Additionally, updated visualization configurations for higher resolution plots and improved clustering analysis have been added.">
+      <option name="closed" value="true" />
+      <created>1730836760893</created>
+      <option name="number" value="00009" />
+      <option name="presentableId" value="LOCAL-00009" />
+      <option name="project" value="LOCAL" />
+      <updated>1730836760893</updated>
+    </task>
+    <task id="LOCAL-00010" summary="Add comprehensive WhatsApp communication analysis report&#10;&#10;Introduced detailed analysis of WhatsApp chat patterns including emoji usage, sentiment analysis, and topic clustering. Added associated visualizations and a new logfile for tracking preprocessing. This provides valuable insights into digital communication dynamics, particularly in the context of neurodiversity and mental health.">
+      <option name="closed" value="true" />
+      <created>1730836797248</created>
+      <option name="number" value="00010" />
+      <option name="presentableId" value="LOCAL-00010" />
+      <option name="project" value="LOCAL" />
+      <updated>1730836797248</updated>
+    </task>
+    <option name="localTasksCounter" value="11" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -193,7 +199,9 @@
     <MESSAGE value="Delete obsolete scripts and update documentation&#10;&#10;Removed `create_png.py` and `dimvis.py` due to redundancy and lack of use. Added a GitHub URL to `REPORT.md` for easier access to the repository. This clean-up helps in maintaining code clarity and reduces repository clutter." />
     <MESSAGE value="Add reports and analysis images&#10;&#10;Introduce new reports and various analytical images to illustrate WhatsApp communication patterns, highlighting temporal dynamics, emoji usage, sentiment analysis, and topic clustering. This addition aims to enhance the understanding of digital interaction, particularly in the context of neurodiversity and mental health." />
     <MESSAGE value="**Filter data, update sentiment analysis, and update clustering**&#10;&#10;Enhance data filtering and update sentiment analysis to focus on meaningful signals. Introduce cluster themes for improved topic analysis and visualization, providing insights into message context and emotional patterns." />
-    <option name="LAST_COMMIT_MESSAGE" value="**Filter data, update sentiment analysis, and update clustering**&#10;&#10;Enhance data filtering and update sentiment analysis to focus on meaningful signals. Introduce cluster themes for improved topic analysis and visualization, providing insights into message context and emotional patterns." />
+    <MESSAGE value="Add new dashboard and remove old Streamlit app&#10;&#10;This commit introduces a new, advanced dashboard for WhatsApp analysis while removing the old Streamlit application. The new dashboard includes enhanced visualization settings, improved data processing, and added statistics for a more comprehensive user experience. Additionally, updated visualization configurations for higher resolution plots and improved clustering analysis have been added." />
+    <MESSAGE value="Add comprehensive WhatsApp communication analysis report&#10;&#10;Introduced detailed analysis of WhatsApp chat patterns including emoji usage, sentiment analysis, and topic clustering. Added associated visualizations and a new logfile for tracking preprocessing. This provides valuable insights into digital communication dynamics, particularly in the context of neurodiversity and mental health." />
+    <option name="LAST_COMMIT_MESSAGE" value="Add comprehensive WhatsApp communication analysis report&#10;&#10;Introduced detailed analysis of WhatsApp chat patterns including emoji usage, sentiment analysis, and topic clustering. Added associated visualizations and a new logfile for tracking preprocessing. This provides valuable insights into digital communication dynamics, particularly in the context of neurodiversity and mental health." />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/visualizations$create_png.coverage" NAME="create_png Coverage Results" MODIFIED="1730662359032" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/reports" />
